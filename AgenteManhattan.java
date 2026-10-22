@@ -4,7 +4,6 @@ import jade.core.Runtime;
 import jade.wrapper.AgentContainer;
 
 public class AgenteManhattan extends AgenteJugador {
-
     @Override
     protected int heuristica(Estado e) {
         return Heuristicas.manhattan(e);

@@ -159,6 +159,9 @@ public abstract class AgenteJugador extends Agent {
         return camino;
     }
 
+    /*
+    -> Envia un avance del estado actual con el formato "PROGRESO:hn:813402765"
+     */
     public void notificarAvance(Estado estadoActual) {
         ACLMessage msgProgreso = new ACLMessage(ACLMessage.INFORM);
         msgProgreso.addReceiver(new jade.core.AID("AgenteGUI", jade.core.AID.ISLOCALNAME));
@@ -166,6 +169,18 @@ public abstract class AgenteJugador extends Agent {
                 getLocalName(), codificarEstado(estadoActual)));
         send(msgProgreso);
         //System.out.println(codificarEstado(estadoActual));
+    }
+    /*
+    -> Envia la solucion con el formato "SOLUCION:hn:813402765,813042765,..."
+    */
+    public void enviarSolucion(Solucion s){
+        List<Estado> caminoCopia = new ArrayList<>(s.camino);
+        ACLMessage msgProgreso = new ACLMessage(ACLMessage.INFORM);
+        msgProgreso.addReceiver(new jade.core.AID("AgenteGUI", jade.core.AID.ISLOCALNAME));
+        msgProgreso.setContent(String.format("SOLUCION:%s:%s",
+                getLocalName(), codificarCamino(caminoCopia)));
+        send(msgProgreso);
+        //System.out.printf("SOLUCION:%s:%s%n",getLocalName(), codificarCamino(caminoCopia));
     }
 
     /*
@@ -226,13 +241,15 @@ public abstract class AgenteJugador extends Agent {
             /*
             NOTIFICA A LA GUI EL ESTADO ACTUAL.
              */
-            notificarAvance(n.estado);
+            //notificarAvance(n.estado);
 
             if (n.estado.esMeta()) {
                 List<Estado> camino = new ArrayList<>();
                 for (Nodo x = n; x != null; x = x.padre) camino.add(x.estado);
                 Collections.reverse(camino);
-                return new Solucion(camino, expandidos, generados, (System.nanoTime() - tiempo) / 1e6);
+                Solucion s = new Solucion(camino, expandidos, generados, (System.nanoTime() - tiempo) / 1e6);
+                enviarSolucion(s);
+                return s;
             }
 
             for (Estado s : n.estado.sucesores()) {
@@ -246,7 +263,9 @@ public abstract class AgenteJugador extends Agent {
                 }
             }
         }
-        return new Solucion(new ArrayList<>(), expandidos, generados, (System.nanoTime() - tiempo) / 1e6);
+        Solucion s = new Solucion(new ArrayList<>(), expandidos, generados, (System.nanoTime() - tiempo) / 1e6);
+        enviarSolucion(s);
+        return s;
     }
 
     /*
